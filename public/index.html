@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Newsday</title>
+  <style>
+    :root {
+      --good:    #2a7a2a;
+      --good-bg: #edf7ed;
+      --bad:     #b22222;
+      --bad-bg:  #fdecea;
+      --meh:     #666;
+      --meh-bg:  #f5f5f5;
+      --fg:      #1a1a1a;
+      --border:  #ddd;
+      --radius:  10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Georgia, "Times New Roman", serif;
+      background: #fafaf8;
+      color: var(--fg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 2.8rem;
+      letter-spacing: -1px;
+      font-weight: 700;
+    }
+
+    header p {
+      color: #888;
+      font-size: 0.9rem;
+      margin-top: 0.3rem;
+      font-style: italic;
+    }
+
+    /* ── verdict card ─────────────────────────────────────────── */
+    #verdict-card {
+      width: 100%;
+      max-width: 640px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      background: #fff;
+      margin-bottom: 1.5rem;
+      transition: border-color 0.4s, background 0.4s;
+    }
+
+    #verdict-text {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      min-height: 2em;
+    }
+
+    /* colour the whole card based on overall mood */
+    #verdict-card.good { border-color: var(--good); background: var(--good-bg); }
+    #verdict-card.bad  { border-color: var(--bad);  background: var(--bad-bg);  }
+    #verdict-card.meh  { border-color: var(--border); }
+
+    #verdict-text.good { color: var(--good); }
+    #verdict-text.bad  { color: var(--bad);  }
+    #verdict-text.meh  { color: var(--meh);  }
+
+    /* ── score bar ────────────────────────────────────────────── */
+    .score-bar-wrap {
+      margin: 1.2rem 0 0.8rem;
+      position: relative;
+    }
+
+    .score-bar-track {
+      height: 10px;
+      background: linear-gradient(to right, #c0392b 0%, #e0c050 45%, #e0c050 55%, #2d7a2d 100%);
+      border-radius: 5px;
+      position: relative;
+    }
+
+    .score-bar-tick {
+      position: absolute;
+      top: -4px;
+      width: 4px;
+      height: 18px;
+      background: #1a1a1a;
+      border-radius: 2px;
+      transform: translateX(-50%);
+      transition: left 0.6s ease;
+    }
+
+    .score-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: #999;
+      margin-top: 4px;
+      font-family: system-ui, sans-serif;
+    }
+
+    .score-value {
+      font-size: 0.85rem;
+      color: #555;
+      margin-top: 0.4rem;
+      font-family: system-ui, sans-serif;
+    }
+
+    /* ── counts ───────────────────────────────────────────────── */
+    .counts {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      margin-top: 1rem;
+      font-family: system-ui, sans-serif;
+      font-size: 0.85rem;
+    }
+
+    .counts span { display: flex; align-items: center; gap: 0.3rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .dot.good { background: var(--good); }
+    .dot.bad  { background: var(--bad);  }
+    .dot.meh  { background: #bbb; }
+
+    /* ── refresh button ───────────────────────────────────────── */
+    #refresh-btn {
+      margin-top: 1.2rem;
+      padding: 0.45rem 1.1rem;
+      font-size: 0.82rem;
+      font-family: system-ui, sans-serif;
+      background: transparent;
+      border: 1px solid #bbb;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #555;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    #refresh-btn:hover { border-color: #888; color: #222; }
+    #refresh-btn:disabled { opacity: 0.5; cursor: default; }
+
+    /* ── meta line ────────────────────────────────────────────── */
+    #meta {
+      font-size: 0.75rem;
+      color: #aaa;
+      font-family: system-ui, sans-serif;
+      margin-top: 0.5rem;
+    }
+
+    /* ── headlines list ───────────────────────────────────────── */
+    #headlines-wrap {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    #headlines-wrap h2 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #aaa;
+      margin-bottom: 0.8rem;
+      font-family: system-ui, sans-serif;
+    }
+
+    .headline-item {
+      display: flex;
+      align-items: baseline;
+      gap: 0.8rem;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid #eee;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .headline-score {
+      font-family: "Courier New", monospace;
+      font-size: 0.78rem;
+      min-width: 5ch;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .headline-score.good { color: var(--good); }
+    .headline-score.bad  { color: var(--bad);  }
+    .headline-score.meh  { color: #bbb; }
+
+    /* ── loading / error states ───────────────────────────────── */
+    .state-msg {
+      color: #aaa;
+      font-size: 1rem;
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 1.1em; height: 1.1em;
+      border: 2px solid #ccc;
+      border-top-color: #888;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.5em;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>📰 Newsday</h1>
+    <p>Should you read the news today?</p>
+  </header>
+
+  <div id="verdict-card">
+    <div id="verdict-text" class="state-msg">
+      <span class="spinner"></span> Checking the news…
+    </div>
+  </div>
+
+  <div id="headlines-wrap">
+    <div class="state-msg"><span class="spinner"></span></div>
+  </div>
+
+  <script>
+    const verdictCard = document.getElementById('verdict-card');
+    const verdictText = document.getElementById('verdict-text');
+    const headlinesWrap = document.getElementById('headlines-wrap');
+
+    function scoreBar(avg) {
+      // avg is -1..+1; map to 0..100%
+      const pct = Math.round((avg + 1) / 2 * 100);
+      return `
+        <div class="score-bar-wrap">
+          <div class="score-bar-track">
+            <div class="score-bar-tick" style="left:${pct}%"></div>
+          </div>
+          <div class="score-labels"><span>Very bad</span><span>Neutral</span><span>Very good</span></div>
+        </div>
+        <div class="score-value">Average score: ${avg >= 0 ? '+' : ''}${avg.toFixed(3)}</div>
+      `;
+    }
+
+    function signedScore(n) {
+      return (n >= 0 ? '+' : '') + n.toFixed(2);
+    }
+
+    async function load(bustCache = false) {
+      verdictText.innerHTML = '<span class="spinner"></span> Checking the news…';
+      verdictText.className = 'state-msg';
+      verdictCard.className = '';
+      headlinesWrap.innerHTML = '<div class="state-msg"><span class="spinner"></span></div>';
+
+      const btn = document.getElementById('refresh-btn');
+      if (btn) btn.disabled = true;
+
+      const url = bustCache
+        ? `/api/sentiment?t=${Date.now()}`
+        : '/api/sentiment';
+
+      let data;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        data = await res.json();
+      } catch (err) {
+        verdictText.innerHTML = '⚠️ Could not load headlines.<br><small>' + err.message + '</small>';
+        headlinesWrap.innerHTML = '';
+        if (btn) btn.disabled = false;
+        return;
+      }
+
+      const { summary, headlines, source, elapsed_s } = data;
+      const mood = summary.avg >= 0.05 ? 'good' : summary.avg <= -0.05 ? 'bad' : 'meh';
+      const emoji = mood === 'good' ? '🌤️' : mood === 'bad' ? '⛈️' : '🌥️';
+
+      // Verdict card
+      verdictCard.className = mood;
+      verdictText.className = mood;
+      verdictText.textContent = emoji + ' ' + summary.verdict;
+
+      verdictCard.innerHTML = `
+        <div id="verdict-text" class="${mood}">${emoji} ${summary.verdict}</div>
+        ${scoreBar(summary.avg)}
+        <div class="counts">
+          <span><span class="dot good"></span> ${summary.good} good</span>
+          <span><span class="dot bad"></span>  ${summary.bad} bad</span>
+          <span><span class="dot meh"></span>  ${summary.meh} neutral</span>
+        </div>
+        <button id="refresh-btn" onclick="load(true)">↺ Refresh</button>
+        <div id="meta">via ${source} · ${elapsed_s}s · cached 10 min</div>
+      `;
+
+      // Headlines list
+      if (!headlines.length) {
+        headlinesWrap.innerHTML = '<p class="state-msg">No headlines found.</p>';
+        return;
+      }
+
+      headlinesWrap.innerHTML = '<h2>Headlines</h2>' + headlines.map(h => `
+        <div class="headline-item">
+          <span class="headline-score ${h.label}">${signedScore(h.compound)}</span>
+          <span>${h.text}</span>
+        </div>
+      `).join('');
+    }
+
+    load();
+  </script>
+</body>
+</html>
