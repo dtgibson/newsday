@@ -1,10 +1,11 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/sentiment.py", "use": "@vercel/python" }
+    { "src": "api/sentiment.py", "use": "@vercel/python" },
+    { "src": "index.html",       "use": "@vercel/static"  }
   ],
   "routes": [
     { "src": "/api/sentiment", "dest": "/api/sentiment.py" },
-    { "src": "/(.*)",           "dest": "/public/$1" }
+    { "src": "/",              "dest": "/index.html"       }
   ]
 }
